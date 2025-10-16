@@ -114,7 +114,7 @@ const Footer = () => {
               </li>
             </ul>
             
-            <h3 className="text-xl font-bold mb-4 text-main">SUBSCRIBE</h3>
+            <h3 className="text-xl font-bold mb-4 text-green-500">SUBSCRIBE</h3>
             <p className="mb-4 text-gray-300">
               Leave your email address for news updates
             </p>

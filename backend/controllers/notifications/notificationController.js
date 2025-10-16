@@ -23,31 +23,41 @@ exports.createNotification = async (req, res) => {
     // Here you would trigger real-time notification via Socket.io
     // io.to(recipient).emit('notification', notification);
     
-    // If notification is created by admin, send email only to subscribed customers
+    // If notification is created by admin, send email to all newsletter subscribers
     if (req.user && req.user.role === 'admin') {
       // Import Newsletter model
       const Newsletter = require('../../models/newsletter/newsletter');
       
-      // Fetch all active customers
+      // Fetch all newsletter subscribers
+      const subscribers = await Newsletter.find({ isSubscribed: true }, 'email');
+      
+      // Also fetch active customers
       const customers = await User.find({ role: 'customer', status: 'active' }, 'email firstName lastName');
       
-      // Send email only to subscribed customers
-      for (const customer of customers) {
+      // Track email sending results
+      let sentCount = 0;
+      let failedCount = 0;
+      
+      // Send email to all newsletter subscribers
+      for (const subscriber of subscribers) {
         try {
-          // Check if customer is subscribed to newsletter
-          const subscription = await Newsletter.findOne({ email: customer.email, isSubscribed: true });
+          // Try to find customer info for personalization
+          const customer = customers.find(c => c.email === subscriber.email);
+          const userName = customer 
+            ? `${customer.firstName} ${customer.lastName}` 
+            : subscriber.email.split('@')[0]; // Use email username if no customer record
           
-          // Only send if subscribed
-          if (subscription) {
-            await emailSender.sendNotificationEmail(
-              customer.email,
-              title,
-              message,
-              `${customer.firstName} ${customer.lastName}`
-            );
-          }
+          await emailSender.sendNotificationEmail(
+            subscriber.email,
+            title,
+            message,
+            userName
+          );
+          
+          sentCount++;
         } catch (emailError) {
-          console.error(`Failed to send email to ${customer.email}:`, emailError);
+          console.error(`Failed to send email to ${subscriber.email}:`, emailError);
+          failedCount++;
           // Continue with other emails even if one fails
         }
       }

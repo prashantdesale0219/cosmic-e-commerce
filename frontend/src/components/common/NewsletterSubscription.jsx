@@ -31,25 +31,22 @@ const NewsletterSubscription = () => {
   };
 
   return (
-    <div className="bg-gray-100 p-6 rounded-lg shadow-sm">
-      <h3 className="text-xl font-semibold mb-3">Subscribe to Our Newsletter</h3>
-      <p className="text-gray-600 mb-4">
-        Stay updated with our latest products, offers and news.
-      </p>
-      
-      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-2">
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Enter your email"
-          className="flex-grow px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          required
-        />
+    <div className="bg-gray-700 p-4 rounded-lg border border-gray-600">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        <div className="relative">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter your email"
+            className="w-full px-4 py-3 bg-gray-600 text-white border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 placeholder-gray-400"
+            required
+          />
+        </div>
         <button
           type="submit"
           disabled={loading}
-          className={`px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors ${
+          className={`w-full px-4 py-3 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 transition-colors ${
             loading ? 'opacity-70 cursor-not-allowed' : ''
           }`}
         >
