@@ -2,6 +2,7 @@ const Order = require('../../models/orders/order');
 const User = require('../../models/auth/auth');
 const { sendOrderStatusUpdateEmail } = require('../../utils/emailSender');
 const { createNotification } = require('../notifications/notificationController');
+const crypto = require('crypto');
 
 /**
  * Submit shipping address and create pending order
@@ -137,18 +138,28 @@ exports.submitShippingAddress = async (req, res) => {
  */
 exports.addShippingCharges = async (req, res) => {
   try {
-    const { orderId } = req.params;
-    const { shippingCharges, adminNotes } = req.body;
+    const { id } = req.params;
+    const { shippingCharges, adminNotes, finalPrice } = req.body;
     
-    if (!shippingCharges) {
+    // Validate input data
+    if (shippingCharges === undefined || shippingCharges === null) {
       return res.status(400).json({
         success: false,
         message: 'Shipping charges are required'
       });
     }
     
-    // Find the order
-    const order = await Order.findOne({ orderId });
+    // Convert to number and validate
+    const shippingChargesNum = Number(shippingCharges);
+    if (isNaN(shippingChargesNum)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Shipping charges must be a valid number'
+      });
+    }
+    
+    // Find the order by ID
+    const order = await Order.findById(id);
     
     if (!order) {
       return res.status(404).json({
@@ -158,42 +169,125 @@ exports.addShippingCharges = async (req, res) => {
     }
     
     // Update order with shipping charges
-    order.shippingCharges = shippingCharges;
+    order.shippingCharges = shippingChargesNum;
     order.adminNotes = adminNotes || '';
-    order.finalPrice = order.totalPrice + shippingCharges;
-    order.orderStatus = 'waiting_confirmation';
-    await order.save();
+    order.finalPrice = finalPrice || (order.totalPrice + shippingChargesNum);
+    order.orderStatus = 'Awaiting Confirmation';
     
-    // Find the customer
-    const customer = await User.findById(order.userId);
-    
-    if (customer) {
-      // Create notification for customer
-      await createNotification({
-        title: 'Shipping Charges Added',
-        message: `Shipping charges of ₹${shippingCharges} have been added to your order. Total amount: ₹${order.finalPrice}. Please confirm to proceed.`,
-        type: 'order',
-        user: { id: customer._id },
-        referenceId: order._id
+    try {
+      await order.save();
+    } catch (saveError) {
+      console.error('Error saving order:', saveError);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to save order with shipping charges',
+        error: saveError.message
       });
-      
-      // Send email to customer
-      await sendOrderStatusUpdateEmail(
-        customer.email,
-        'Shipping Charges Added - Action Required',
-        `Shipping charges of ₹${shippingCharges} have been added to your order. Total amount: ₹${order.finalPrice}. Please confirm to proceed.`,
-        order
-      );
     }
     
-    res.status(200).json({
+    // Handle notification for both registered users and guest users
+    const customerEmail = order.customerEmail || (order.userId && typeof order.userId === 'object' ? order.userId.email : null);
+    
+    if (customerEmail) {
+      try {
+        // Create notification for customer if possible
+        if (order.userId && typeof order.userId === 'object' && order.userId._id) {
+          await createNotification({
+            title: 'Shipping Charges Added',
+            message: `Shipping charges of ₹${shippingCharges} have been added to your order. Total amount: ₹${order.finalPrice}. Please confirm to proceed.`,
+            type: 'order',
+            user: { id: order.userId._id },
+            referenceId: order._id
+          });
+        }
+        
+        // Generate confirmation token
+        const confirmationToken = crypto.randomBytes(20).toString('hex');
+        
+        // Save token to order
+        order.confirmationToken = confirmationToken;
+        await order.save();
+        
+        // Create confirmation and cancellation URLs
+        const baseUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+        const confirmUrl = `${baseUrl}/order/confirm/${order._id}/${confirmationToken}`;
+        const cancelUrl = `${baseUrl}/order/cancel/${order._id}/${confirmationToken}`;
+        
+        // Send email to customer with confirmation buttons
+        try {
+          await sendOrderStatusUpdateEmail(
+            customerEmail,
+            'Shipping Charges Added - Action Required',
+            `
+              <h1 style="color: #333; text-align: center; margin-bottom: 20px;">Your Order is Ready for Confirmation</h1>
+              <p style="font-size: 16px;">Dear Customer,</p>
+              <p>We have reviewed your order and determined the final price including shipping charges.</p>
+              
+              <div style="background-color: #f5f5f5; border-left: 4px solid #4CAF50; padding: 15px; margin: 20px 0;">
+                  <p><strong>Subtotal:</strong> ₹${order.totalPrice}</p>
+                  <p><strong>Shipping:</strong> ₹${order.shippingCharges}</p>
+                  <p><strong>Total:</strong> ₹${order.finalPrice}</p>
+                  ${order.adminNotes ? `<p><strong>Notes:</strong> ${order.adminNotes}</p>` : ''}
+              </div>
+              
+              <p style="font-weight: bold; text-align: center; margin: 20px 0;">Please click one of the buttons below to confirm or cancel your order:</p>
+              
+              <table width="100%" cellspacing="0" cellpadding="0">
+                  <tr>
+                      <td align="center" style="padding: 10px;">
+                          <table cellspacing="0" cellpadding="0">
+                              <tr>
+                                  <td style="border-radius: 5px; background: #4CAF50; text-align: center;">
+                                      <a href="${confirmUrl}" style="display: inline-block; padding: 12px 25px; color: white; font-weight: bold; text-decoration: none; font-size: 16px;">✅ CONFIRM ORDER</a>
+                                  </td>
+                              </tr>
+                          </table>
+                      </td>
+                      <td align="center" style="padding: 10px;">
+                          <table cellspacing="0" cellpadding="0">
+                              <tr>
+                                  <td style="border-radius: 5px; background: #f44336; text-align: center;">
+                                      <a href="${cancelUrl}" style="display: inline-block; padding: 12px 25px; color: white; font-weight: bold; text-decoration: none; font-size: 16px;">❌ CANCEL ORDER</a>
+                                  </td>
+                              </tr>
+                          </table>
+                      </td>
+                  </tr>
+              </table>
+              
+              <p style="margin-top: 30px;">If you have any questions, please contact our customer support.</p>
+              <p>Thank you for shopping with us!</p>
+              
+              <div style="font-size: 12px; color: #777; margin-top: 30px; border-top: 1px solid #eee; padding-top: 10px;">
+                  <p>If the buttons above do not work, you can copy and paste these links into your browser:</p>
+                  <p>Confirm: ${confirmUrl}</p>
+                  <p>Cancel: ${cancelUrl}</p>
+              </div>
+            `,
+            order
+          );
+          console.log('Order status update email sent successfully');
+        } catch (emailError) {
+          console.error('Error sending order status email:', emailError);
+          // Continue even if email fails, but log the error
+        }
+      } catch (error) {
+        console.error('Error sending notification:', error);
+        // Continue even if notification fails
+      }
+    }
+    
+    // Return success response without sending the entire order object
+    return res.status(200).json({
       success: true,
       message: 'Shipping charges added successfully',
-      data: order
+      orderId: order._id,
+      shippingCharges: order.shippingCharges,
+      finalPrice: order.finalPrice
     });
   } catch (error) {
-    console.error('Error adding shipping charges:', error);
-    res.status(500).json({
+    console.error('Error in addShippingCharges:', error);
+    return res.status(500).json({
       success: false,
       message: 'Failed to add shipping charges',
       error: error.message

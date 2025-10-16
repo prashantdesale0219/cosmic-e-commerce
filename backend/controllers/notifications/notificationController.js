@@ -331,3 +331,155 @@ const logError = async (error, req = {}, level = 'error') => {
 
 // Export the error logging function for use in other controllers
 exports.logError = logError;
+
+// Send notification to all newsletter subscribers
+exports.sendNewsletterNotification = async (req, res) => {
+  try {
+    const { title, message, imageUrl } = req.body;
+    
+    if (!title || !message) {
+      return res.status(400).json({
+        success: false,
+        message: 'Title and message are required'
+      });
+    }
+    
+    // Import Newsletter model
+    const Newsletter = require('../../models/newsletter/newsletter');
+    
+    // Get all active newsletter subscribers
+    const subscribers = await Newsletter.find({ isSubscribed: true });
+    
+    console.log(`Found ${subscribers.length} active newsletter subscribers`);
+    
+    if (subscribers.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No active newsletter subscribers found'
+      });
+    }
+    
+    // Track email sending results
+    const results = {
+      total: subscribers.length,
+      sent: 0,
+      failed: 0,
+      errors: []
+    };
+    
+    // Create a notification record
+    const notification = new Notification({
+      recipient: null, // No specific recipient as it's for all subscribers
+      recipientModel: 'User',
+      type: 'system_alert',
+      title,
+      message,
+      data: {
+        imageUrl,
+        sentToSubscribers: true,
+        subscriberCount: subscribers.length
+      }
+    });
+    
+    await notification.save();
+    console.log('Notification record created:', notification._id);
+    
+    // Check SMTP configuration
+    console.log('SMTP Configuration:', {
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: process.env.SMTP_PORT || 587,
+      secure: process.env.SMTP_SECURE === 'true' || false,
+      user: process.env.SMTP_EMAIL ? 'Set' : 'Not set',
+      pass: process.env.SMTP_PASSWORD ? 'Set' : 'Not set'
+    });
+    
+    // Send emails to all subscribers
+    for (const subscriber of subscribers) {
+      try {
+        // Extract name from email for personalization
+        const email = subscriber.email;
+        console.log(`Attempting to send email to: ${email}`);
+        
+        const fullName = email.split('@')[0];
+        const nameParts = fullName.split(/[._-]/);
+        const firstName = nameParts[0] ? nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1) : '';
+        const lastName = nameParts[1] ? nameParts[1].charAt(0).toUpperCase() + nameParts[1].slice(1) : '';
+        const userName = firstName + (lastName ? ' ' + lastName : '');
+        
+        // Send notification email
+        const emailResult = await emailSender.sendNotificationEmail(
+          email,
+          title,
+          message,
+          userName
+        );
+        
+        console.log('Email sending result:', JSON.stringify(emailResult));
+        
+        // nodemailer doesn't return success property, so check if there's no error
+        if (!emailResult.rejected || emailResult.rejected.length === 0) {
+          results.sent++;
+          console.log(`✅ Email sent successfully to ${email}`);
+        } else {
+          results.failed++;
+          console.error(`❌ Email rejected for ${email}:`, emailResult.rejected);
+          results.errors.push({
+            email,
+            error: 'Email rejected'
+          });
+        }
+      } catch (emailError) {
+        console.error(`❌ Failed to send email to ${subscriber.email}:`, emailError);
+        results.failed++;
+        results.errors.push({
+          email: subscriber.email,
+          error: emailError.message
+        });
+      }
+    }
+    
+    // Update the notification with results
+    notification.data.emailResults = {
+      sent: results.sent,
+      failed: results.failed
+    };
+    await notification.save();
+    
+    // Log activity
+    if (req.user) {
+      const activityLog = new ActivityLog({
+        user: req.user._id,
+        userModel: req.user.role === 'admin' ? 'Admin' : 'User',
+        action: 'send_newsletter_notification',
+        entityType: 'Notification',
+        entityId: notification._id,
+        details: {
+          title,
+          subscriberCount: subscribers.length,
+          emailsSent: results.sent,
+          emailsFailed: results.failed
+        },
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent']
+      });
+      
+      await activityLog.save();
+    }
+    
+    res.status(200).json({
+      success: true,
+      message: `Notification sent to ${results.sent} out of ${results.total} subscribers`,
+      data: {
+        notification,
+        emailResults: results
+      }
+    });
+  } catch (error) {
+    await logError(error, req, 'error');
+    res.status(500).json({
+      success: false,
+      message: 'Failed to send newsletter notification',
+      error: error.message
+    });
+  }
+};

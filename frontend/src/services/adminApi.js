@@ -366,6 +366,7 @@ export const notificationManagementApi = {
     });
   },
   createNotification: (notificationData) => API.post('/notifications', notificationData),
+  sendNewsletterNotification: (notificationData) => API.post('/notifications/newsletter', notificationData),
   markAsRead: (id) => API.put(`/notifications/${id}/read`),
   markAllAsRead: () => API.put('/notifications/mark-all-read'),
   deleteNotification: (id) => API.delete(`/notifications/${id}`),
