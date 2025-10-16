@@ -6,8 +6,8 @@ const nodemailer = require('nodemailer');
     port: process.env.SMTP_PORT || 587,
     secure: process.env.SMTP_SECURE === 'true' || false,
     auth: {
-      user: process.env.SMTP_EMAIL || 'your-email@gmail.com',
-      pass: process.env.SMTP_PASSWORD || 'your-password'
+      user: process.env.SMTP_EMAIL || 'kadambhakti0219@gmail.com',
+      pass: process.env.SMTP_PASSWORD || 'vqzu guji mfvg mnlf'
     },
     tls: {
       rejectUnauthorized: false // Allow self-signed certificates and fix TLS issues
