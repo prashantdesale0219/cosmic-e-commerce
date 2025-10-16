@@ -1,0 +1,304 @@
+{
+  "info": {
+    "_postman_id": "a5e8b7c6-d4e3-4f21-9a10-b8c7d6e5a4f3",
+    "name": "Cosmic Product Management API",
+    "description": "API collection for testing product management endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get All Products",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/products",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "products"]
+        },
+        "description": "Get all products with optional filtering"
+      },
+      "response": []
+    },
+    {
+      "name": "Get Product By ID",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/products/{{productId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "products", "{{productId}}"]
+        },
+        "description": "Get a single product by ID or slug"
+      },
+      "response": []
+    },
+    {
+      "name": "Get Product Details",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/products/{{productId}}/details",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "products", "{{productId}}", "details"]
+        },
+        "description": "Get complete product details with reviews, related products, and rating distribution"
+      },
+      "response": []
+    },
+    {
+      "name": "Get Related Products",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/products/{{productId}}/related",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "products", "{{productId}}", "related"]
+        },
+        "description": "Get products related to a specific product"
+      },
+      "response": []
+    },
+    {
+      "name": "Get Product Rating Summary",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/products/{{productId}}/rating-summary",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "products", "{{productId}}", "rating-summary"]
+        },
+        "description": "Get rating distribution for a product"
+      },
+      "response": []
+    },
+    {
+      "name": "Get Products By Tag",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/products/tags/{{tag}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "products", "tags", "{{tag}}"]
+        },
+        "description": "Get products by tag"
+      },
+      "response": []
+    },
+    {
+      "name": "Get Product Applications",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/api/products/applications",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "products", "applications"]
+        },
+        "description": "Get all unique product applications/tags"
+      },
+      "response": []
+    },
+    {
+      "name": "Create Product",
+      "request": {
+        "method": "POST",
+        "url": {
+          "raw": "{{baseUrl}}/api/products",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "products"]
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "name",
+              "value": "Solar Panel 10W 12V Monocrystalline",
+              "type": "text"
+            },
+            {
+              "key": "description",
+              "value": "High efficiency monocrystalline solar panel with 10W power output. Perfect for small-scale solar projects, camping, RVs, and more.",
+              "type": "text"
+            },
+            {
+              "key": "price",
+              "value": "999",
+              "type": "text"
+            },
+            {
+              "key": "oldPrice",
+              "value": "1299",
+              "type": "text"
+            },
+            {
+              "key": "mrp",
+              "value": "1499",
+              "type": "text"
+            },
+            {
+              "key": "stock",
+              "value": "50",
+              "type": "text"
+            },
+            {
+              "key": "categoryId",
+              "value": "{{categoryId}}",
+              "type": "text"
+            },
+            {
+              "key": "sku",
+              "value": "SP-10W",
+              "type": "text"
+            },
+            {
+              "key": "features",
+              "value": "High conversion efficiency: 21%\\nMaximum power: 10W\\nOperating voltage: 12V\\nWeatherproof and durable design\\nAnti-reflective, high transparency glass\\nPre-drilled holes for easy mounting\\nCorrosion-resistant aluminum frame",
+              "type": "text"
+            },
+            {
+              "key": "tags",
+              "value": "[\"solar\", \"panel\", \"monocrystalline\", \"12V\", \"outdoor\"]",
+              "type": "text"
+            },
+            {
+              "key": "technical",
+              "value": "{\"systemCapacityKw\": 0.01, \"phase\": \"Single Phase\", \"moduleType\": \"Monocrystalline\", \"modulePowerW\": 10, \"moduleCount\": 1, \"inverterType\": \"N/A\", \"inverterCapacityW\": 0, \"dcVoltageRange\": \"12V\", \"acOutput\": \"N/A\", \"efficiencyPercent\": 21, \"temperatureCoefficient\": \"-0.35%/°C\", \"operatingTemp\": \"-40°C to 85°C\", \"protections\": [\"Weatherproof\", \"UV resistant\"], \"warranty\": {\"moduleYears\": 25, \"powerOutputYears\": 20, \"inverterYears\": 0, \"others\": \"\"}, \"weightKg\": 1.2, \"dimensions\": {\"length\": 340, \"width\": 280, \"height\": 30, \"unit\": \"mm\"}}",
+              "type": "text"
+            },
+            {
+              "key": "installation",
+              "value": "{\"kitComponents\": [{\"name\": \"Solar Panel 10W\", \"quantity\": 1, \"spec\": \"10W Monocrystalline\"}], \"notIncluded\": [\"Mounting hardware\", \"Charge controller\", \"Cables\"], \"notes\": \"Professional installation recommended for optimal performance\", \"installationType\": \"Roof mount\"}",
+              "type": "text"
+            },
+            {
+              "key": "legal",
+              "value": "{\"manufacturer\": {\"name\": \"Cosmic Solar\", \"address\": \"123 Solar Way, Sunshine City\"}, \"importer\": {\"name\": \"Cosmic Imports\", \"address\": \"456 Import Avenue, Port City\"}, \"packingInfo\": \"Eco-friendly packaging\", \"countryOfOrigin\": \"India\"}",
+              "type": "text"
+            },
+            {
+              "key": "images",
+              "type": "file",
+              "src": []
+            }
+          ]
+        },
+        "description": "Create a new product (Admin only)"
+      },
+      "response": []
+    },
+    {
+      "name": "Update Product",
+      "request": {
+        "method": "PUT",
+        "url": {
+          "raw": "{{baseUrl}}/api/products/{{productId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "products", "{{productId}}"]
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "name",
+              "value": "Solar Panel 10W 12V Monocrystalline - Updated",
+              "type": "text"
+            },
+            {
+              "key": "price",
+              "value": "899",
+              "type": "text"
+            },
+            {
+              "key": "stock",
+              "value": "45",
+              "type": "text"
+            },
+            {
+              "key": "images",
+              "type": "file",
+              "src": []
+            }
+          ]
+        },
+        "description": "Update an existing product (Admin only)"
+      },
+      "response": []
+    },
+    {
+      "name": "Delete Product",
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "{{baseUrl}}/api/products/{{productId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "products", "{{productId}}"]
+        },
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "type": "text"
+          }
+        ],
+        "description": "Delete a product (Admin only)"
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "YOUR_AUTH_TOKEN",
+      "type": "string"
+    },
+    {
+      "key": "productId",
+      "value": "PRODUCT_ID_OR_SLUG",
+      "type": "string"
+    },
+    {
+      "key": "categoryId",
+      "value": "CATEGORY_ID",
+      "type": "string"
+    },
+    {
+      "key": "tag",
+      "value": "solar",
+      "type": "string"
+    }
+  ]
+}

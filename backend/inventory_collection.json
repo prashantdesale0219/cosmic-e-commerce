@@ -1,0 +1,145 @@
+{
+  "info": {
+    "name": "Cosmic Inventory API",
+    "description": "Collection for Inventory Management API endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Adjust Inventory",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "description": "Admin JWT token"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 10,\n  \"action\": \"add\",\n  \"reason\": \"Restocking\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/inventory/adjust",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "inventory", "adjust"]
+        },
+        "description": "Adjust inventory levels for a product (admin only)"
+      }
+    },
+    {
+      "name": "Get Inventory Logs",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "description": "Admin JWT token"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/inventory/logs?page=1&limit=10",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "inventory", "logs"],
+          "query": [
+            {
+              "key": "page",
+              "value": "1"
+            },
+            {
+              "key": "limit",
+              "value": "10"
+            },
+            {
+              "key": "productId",
+              "value": "{{productId}}",
+              "disabled": true
+            },
+            {
+              "key": "action",
+              "value": "add",
+              "disabled": true
+            },
+            {
+              "key": "startDate",
+              "value": "2023-01-01",
+              "disabled": true
+            },
+            {
+              "key": "endDate",
+              "value": "2023-12-31",
+              "disabled": true
+            }
+          ]
+        },
+        "description": "Get all inventory adjustment logs with pagination (admin only)"
+      }
+    },
+    {
+      "name": "Get Inventory Log by ID",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "description": "Admin JWT token"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/inventory/logs/{{logId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "inventory", "logs", "{{logId}}"]
+        },
+        "description": "Get a specific inventory log by ID (admin only)"
+      }
+    },
+    {
+      "name": "Get Inventory Summary",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "description": "Admin JWT token"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/inventory/summary",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "inventory", "summary"]
+        },
+        "description": "Get summary of current inventory status (admin only)"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "your-admin-jwt-token",
+      "type": "string"
+    },
+    {
+      "key": "productId",
+      "value": "product-id-here",
+      "type": "string"
+    },
+    {
+      "key": "logId",
+      "value": "log-id-here",
+      "type": "string"
+    }
+  ]
+}

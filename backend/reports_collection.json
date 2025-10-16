@@ -1,0 +1,166 @@
+{
+  "info": {
+    "name": "Cosmic Reports API",
+    "description": "Collection for Reports API endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get Orders Report",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "description": "Admin JWT token"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/reports/orders?startDate=2023-01-01&endDate=2023-12-31",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "reports", "orders"],
+          "query": [
+            {
+              "key": "startDate",
+              "value": "2023-01-01"
+            },
+            {
+              "key": "endDate",
+              "value": "2023-12-31"
+            }
+          ]
+        },
+        "description": "Get orders report for a specific date range (admin only)"
+      }
+    },
+    {
+      "name": "Get Inventory Report",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "description": "Admin JWT token"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/reports/inventory?startDate=2023-01-01&endDate=2023-12-31",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "reports", "inventory"],
+          "query": [
+            {
+              "key": "startDate",
+              "value": "2023-01-01"
+            },
+            {
+              "key": "endDate",
+              "value": "2023-12-31"
+            }
+          ]
+        },
+        "description": "Get inventory report for a specific date range (admin only)"
+      }
+    },
+    {
+      "name": "Get Customers Report",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "description": "Admin JWT token"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/reports/customers?startDate=2023-01-01&endDate=2023-12-31",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "reports", "customers"],
+          "query": [
+            {
+              "key": "startDate",
+              "value": "2023-01-01"
+            },
+            {
+              "key": "endDate",
+              "value": "2023-12-31"
+            }
+          ]
+        },
+        "description": "Get customers report for a specific date range (admin only)"
+      }
+    },
+    {
+      "name": "Get Coupons Report",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "description": "Admin JWT token"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/reports/coupons?startDate=2023-01-01&endDate=2023-12-31",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "reports", "coupons"],
+          "query": [
+            {
+              "key": "startDate",
+              "value": "2023-01-01"
+            },
+            {
+              "key": "endDate",
+              "value": "2023-12-31"
+            }
+          ]
+        },
+        "description": "Get coupons usage report for a specific date range (admin only)"
+      }
+    },
+    {
+      "name": "Get Newsletter Report",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}",
+            "description": "Admin JWT token"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/reports/newsletter?startDate=2023-01-01&endDate=2023-12-31",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "reports", "newsletter"],
+          "query": [
+            {
+              "key": "startDate",
+              "value": "2023-01-01"
+            },
+            {
+              "key": "endDate",
+              "value": "2023-12-31"
+            }
+          ]
+        },
+        "description": "Get newsletter subscription report for a specific date range (admin only)"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "your-admin-jwt-token",
+      "type": "string"
+    }
+  ]
+}

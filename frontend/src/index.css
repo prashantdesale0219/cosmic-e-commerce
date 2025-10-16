@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root{
+    --main-color: #92c51b;
+    --main-color-dark: #92c51b;
+    --main-color-light: #f0f7e6;
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 20s linear infinite;
+}
+
+/* Custom utility classes for main color */
+.text-main {
+  color: var(--main-color);
+}
+.bg-main {
+  background-color: var(--main-color);
+}
+.hover\:bg-main:hover {
+  background-color: var(--main-color);
+}
+.hover\:text-main:hover {
+  color: var(--main-color);
+}
+.border-main {
+  border-color: var(--main-color);
+}
+.focus\:ring-main:focus {
+  --tw-ring-color: var(--main-color);
+}
+.focus\:border-main:focus {
+  border-color: var(--main-color);
+}
+.bg-main-dark {
+  background-color: var(--main-color-dark);
+}
+.hover\:bg-main-dark:hover {
+  background-color: var(--main-color-dark);
+}
+.bg-main-light {
+  background-color: var(--main-color-light);
+}
+.hover\:bg-main-light:hover {
+  background-color: var(--main-color-light);
+}
