@@ -3,6 +3,7 @@ import { FaSearch, FaEdit, FaTrash, FaPlus, FaTimes, FaSave, FaCloudUploadAlt, F
 import { productManagementApi, categoryManagementApi, offerManagementApi } from '../../services/adminApi';
 import { toast } from 'react-toastify';
 import { fixImageUrl } from '../../utils/imageUtils';
+import IconSelector from '../common/IconSelector';
 
 const ProductManagement = () => {
   const [products, setProducts] = useState([]);
@@ -384,8 +385,19 @@ const ProductManagement = () => {
         if (key !== 'images' && key !== 'category' && key !== 'offers' && key !== 'emiOffers') {
           // Check if the value is an object and convert it to JSON string
           if (typeof productData[key] === 'object' && productData[key] !== null) {
-            formData.append(key, JSON.stringify(productData[key]));
-            console.log(`Converting object to JSON for ${key}:`, JSON.stringify(productData[key]));
+            // Process applications to handle icon format properly
+             if (key === 'applications') {
+               const processedApplications = productData[key].map(app => {
+                 // If icon is in format "Library:IconName", use it directly without modification
+                 // The server will handle it as a string
+                 return app;
+               });
+               formData.append(key, JSON.stringify(processedApplications));
+               console.log(`Converting applications to JSON:`, JSON.stringify(processedApplications));
+             } else {
+              formData.append(key, JSON.stringify(productData[key]));
+              console.log(`Converting object to JSON for ${key}:`, JSON.stringify(productData[key]));
+            }
           } else {
             formData.append(key, productData[key]);
           }
@@ -531,7 +543,16 @@ const ProductManagement = () => {
         if (key !== 'images' && key !== '_id' && key !== 'id' && key !== 'category' && key !== 'categoryId') {
           // Handle objects and arrays by stringifying them
           if (typeof editProduct[key] === 'object' && editProduct[key] !== null) {
-            formData.append(key, JSON.stringify(editProduct[key]));
+            // Process applications to handle icon format properly
+             if (key === 'applications') {
+               const processedApplications = editProduct[key].map(app => {
+                 // Use icon directly without modification
+                 return app;
+               });
+               formData.append(key, JSON.stringify(processedApplications));
+             } else {
+              formData.append(key, JSON.stringify(editProduct[key]));
+            }
           } else {
             formData.append(key, editProduct[key]);
           }
@@ -558,9 +579,20 @@ const ProductManagement = () => {
           }
           console.log('Added new images to form data');
         } else if (Array.isArray(editProduct.images) && editProduct.images.length > 0) {
-          // For existing images, we need to pass their paths as 'images' not 'existingImages'
-          formData.append('images', JSON.stringify(editProduct.images));
-          console.log('Using existing images:', JSON.stringify(editProduct.images));
+          // Filter out any empty objects from the images array
+          const filteredImages = editProduct.images.filter(img => {
+            // Check if img is an empty object
+            if (typeof img === 'object' && Object.keys(img).length === 0) {
+              return false;
+            }
+            return true;
+          });
+          
+          // For existing images, we need to pass their paths as 'existingImages'
+          if (filteredImages.length > 0) {
+            formData.append('existingImages', JSON.stringify(filteredImages));
+            console.log('Using existing images:', JSON.stringify(filteredImages));
+          }
         }
       }
 
@@ -743,7 +775,7 @@ const ProductManagement = () => {
                       className="h-12 w-12 object-cover rounded-md"
                       onError={(e) => {
                         e.target.onerror = null;
-                        e.target.src = 'https://via.placeholder.com/50';
+                        e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2VlZWVlZSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiIGZpbGw9IiM5OTk5OTkiPk5vIEltYWdlPC90ZXh0Pjwvc3ZnPg==';
                       }}
                     />
                   ) : (
@@ -1315,17 +1347,14 @@ const ProductManagement = () => {
                           />
                         </div>
                         <div className="mb-2">
-                          <label className="block text-gray-600 text-xs mb-1">Icon URL (must be a valid URL)</label>
-                          <input
-                            type="url"
-                            className="border border-gray-300 rounded-lg w-full py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[#92c51b] focus:border-transparent shadow-sm"
-                            value={application.icon}
-                            onChange={(e) => {
+                          <label className="block text-gray-600 text-xs mb-1">Select Icon</label>
+                          <IconSelector
+                            selectedIcon={application.icon}
+                            onSelectIcon={(selectedIcon) => {
                               const updatedApplications = [...newProduct.applications];
-                              updatedApplications[index] = {...updatedApplications[index], icon: e.target.value};
+                              updatedApplications[index] = {...updatedApplications[index], icon: selectedIcon};
                               setNewProduct({...newProduct, applications: updatedApplications});
                             }}
-                            placeholder="https://example.com/icon.png"
                           />
                         </div>
                         <div className="flex justify-end">
@@ -2505,17 +2534,14 @@ const ProductManagement = () => {
                           />
                         </div>
                         <div>
-                          <label className="block text-gray-700 text-xs font-bold mb-1">Icon (URL)</label>
-                          <input
-                            type="url"
-                            className="border border-gray-300 rounded-lg w-full py-1 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#92c51b] focus:border-transparent"
-                            value={app.icon || ''}
-                            onChange={(e) => {
+                          <label className="block text-gray-700 text-xs font-bold mb-1">Select Icon</label>
+                          <IconSelector
+                            selectedIcon={app.icon || ''}
+                            onSelectIcon={(selectedIcon) => {
                               const newApplications = [...editProduct.applications];
-                              newApplications[index] = {...newApplications[index], icon: e.target.value};
+                              newApplications[index] = {...newApplications[index], icon: selectedIcon};
                               setEditProduct({...editProduct, applications: newApplications});
                             }}
-                            placeholder="Enter a valid URL for the icon"
                           />
                         </div>
                       </div>

@@ -27,6 +27,11 @@ import {
   FaChevronRight,
   FaTag
 } from 'react-icons/fa';
+import * as FaIcons from 'react-icons/fa';
+import * as AiIcons from 'react-icons/ai';
+import * as BiIcons from 'react-icons/bi';
+import * as BsIcons from 'react-icons/bs';
+import * as MdIcons from 'react-icons/md';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination } from 'swiper/modules';
 import 'swiper/css';
@@ -77,7 +82,49 @@ const ProductDetails = () => {
         // Get product details
         const productResponse = await productsApi.getProductDetails(id);
         const productData = productResponse.data.data;
-        console.log(productData)
+        console.log(productData);
+        
+        // Ensure specifications are properly formatted
+        if (productData.technical && typeof productData.technical === 'string') {
+          try {
+            productData.technical = JSON.parse(productData.technical);
+          } catch (e) {
+            console.error("Failed to parse technical specifications:", e);
+          }
+        }
+        
+        // Convert technical data to specifications format for display
+        if (productData.technical && !productData.specifications) {
+          productData.specifications = {};
+          
+          // Map technical fields to specifications
+          const technicalFields = productData.technical;
+          Object.keys(technicalFields).forEach(key => {
+            if (technicalFields[key] !== null && technicalFields[key] !== undefined && technicalFields[key] !== '') {
+              // Format the key for display (convert camelCase to Title Case with spaces)
+              const formattedKey = key.replace(/([A-Z])/g, ' $1')
+                .replace(/^./, str => str.toUpperCase())
+                .trim();
+              
+              // Handle nested objects like warranty
+              if (typeof technicalFields[key] === 'object' && technicalFields[key] !== null) {
+                // For nested objects, flatten them with dot notation
+                const nestedObj = technicalFields[key];
+                Object.keys(nestedObj).forEach(nestedKey => {
+                  if (nestedObj[nestedKey] !== null && nestedObj[nestedKey] !== undefined && nestedObj[nestedKey] !== '') {
+                    const formattedNestedKey = `${formattedKey} - ${nestedKey.replace(/([A-Z])/g, ' $1')
+                      .replace(/^./, str => str.toUpperCase())
+                      .trim()}`;
+                    productData.specifications[formattedNestedKey] = nestedObj[nestedKey];
+                  }
+                });
+              } else {
+                productData.specifications[formattedKey] = technicalFields[key];
+              }
+            }
+          });
+        }
+        
         setProduct(productData);
         
         if (productData.images && productData.images.length > 0) {
@@ -675,16 +722,26 @@ const ProductDetails = () => {
             {/* Price */}
             <div className="mb-4 sm:mb-6">
               <div className="flex flex-wrap items-baseline mb-2">
-                <span className="text-xl sm:text-2xl font-bold text-gray-900">₹{product?.discountPrice?.toLocaleString() || '0'}</span>
-                <span className="ml-2 text-base sm:text-lg text-gray-500 line-through">₹{product?.price?.toLocaleString() || '0'}</span>
-                <span className="ml-2 text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
-                  {product?.price ? Math.round(((product.price - (product.discountPrice || 0)) / product.price) * 100) : 0}% OFF
-                </span>
+                {product?.price && (
+                  <>
+                    {product?.discountPrice ? (
+                      <>
+                        <span className="text-xl sm:text-2xl font-bold text-gray-900">₹{product.discountPrice.toLocaleString()}</span>
+                        <span className="ml-2 text-base sm:text-lg text-gray-500 line-through">₹{product.price.toLocaleString()}</span>
+                        <span className="ml-2 text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                          {Math.round(((product.price - product.discountPrice) / product.price) * 100)}% OFF
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-xl sm:text-2xl font-bold text-gray-900">₹{product.price.toLocaleString()}</span>
+                    )}
+                  </>
+                )}
               </div>
               <div className="flex items-center mb-2">
                 <div className="flex items-center text-green-600 text-xs sm:text-sm mr-3">
                   <FaCheckCircle className="mr-1" />
-                  <span>In Stock</span>
+                  <span>{product?.stock > 0 ? 'In Stock' : 'Out of Stock'}</span>
                 </div>
                 <button 
                   onClick={() => setShowPaymentModal(true)}
@@ -921,7 +978,24 @@ const ProductDetails = () => {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-4">
           {product.applications.map((app, index) => (
             <div key={index} className="flex flex-col items-center text-center p-3 sm:p-4 border border-gray-200 rounded-lg hover:border-main hover:shadow-md transition-all duration-300">
-              <div className="text-main text-2xl sm:text-3xl mb-2 sm:mb-3">{app.icon}</div>
+              <div className="text-main text-2xl sm:text-3xl mb-2 sm:mb-3">
+                {app.icon && app.icon.includes(':') ? (() => {
+                  const [library, iconName] = app.icon.split(':');
+                  const iconLibraries = {
+                    'Fa': FaIcons,
+                    'Ai': AiIcons,
+                    'Bi': BiIcons,
+                    'Bs': BsIcons,
+                    'Md': MdIcons
+                  };
+                  
+                  if (iconLibraries[library] && iconLibraries[library][iconName]) {
+                    const IconComponent = iconLibraries[library][iconName];
+                    return <IconComponent />;
+                  }
+                  return iconName;
+                })() : app.icon}
+              </div>
               <span className="text-sm sm:text-base text-gray-700">{app.name}</span>
             </div>
           ))}
@@ -1001,43 +1075,70 @@ const ProductDetails = () => {
           
           {activeTab === 'specifications' && (
             <div className="space-y-8">
-              <div>
-                <h3 className="text-xl font-semibold text-gray-800 mb-4">Technical Specifications</h3>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <tbody className="divide-y divide-gray-200">
-                      {Object.entries(product?.specifications || {}).map(([key, value], index) => (
-                <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-700">{key}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{value}</td>
-                </tr>
-              ))}
-                    </tbody>
-                  </table>
+              {product?.specifications && Object.keys(product.specifications).length > 0 ? (
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-800 mb-4">Technical Specifications</h3>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <tbody className="divide-y divide-gray-200">
+                        {Object.entries(product.specifications).map(([key, value], index) => (
+                          <tr key={index} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-700">{key}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                              {Array.isArray(value) 
+                                ? value.join(', ') 
+                                : typeof value === 'object' && value !== null
+                                  ? JSON.stringify(value)
+                                  : String(value)
+                              }
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-500">No specifications available for this product.</p>
+                </div>
+              )}
               
-              <div>
-                <h3 className="text-xl font-semibold text-gray-800 mb-4">Compliance & Certifications</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                  <div className="flex flex-col items-center text-center p-4 border border-gray-200 rounded-lg">
-                    <FaShieldAlt className="text-main text-2xl mb-2" />
-                    <span className="text-sm font-medium text-gray-700">CE Certified</span>
-                  </div>
-                  <div className="flex flex-col items-center text-center p-4 border border-gray-200 rounded-lg">
-                    <FaShieldAlt className="text-main text-2xl mb-2" />
-                    <span className="text-sm font-medium text-gray-700">RoHS Compliant</span>
-                  </div>
-                  <div className="flex flex-col items-center text-center p-4 border border-gray-200 rounded-lg">
-                    <FaShieldAlt className="text-main text-2xl mb-2" />
-                    <span className="text-sm font-medium text-gray-700">ISO 9001</span>
-                  </div>
-                  <div className="flex flex-col items-center text-center p-4 border border-gray-200 rounded-lg">
-                    <FaShieldAlt className="text-main text-2xl mb-2" />
-                    <span className="text-sm font-medium text-gray-700">IEC 61215</span>
+              {product?.certifications && product.certifications.length > 0 ? (
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-800 mb-4">Compliance & Certifications</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    {product.certifications.map((cert, index) => (
+                      <div key={index} className="flex flex-col items-center text-center p-4 border border-gray-200 rounded-lg">
+                        <FaShieldAlt className="text-main text-2xl mb-2" />
+                        <span className="text-sm font-medium text-gray-700">{cert}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-800 mb-4">Compliance & Certifications</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    <div className="flex flex-col items-center text-center p-4 border border-gray-200 rounded-lg">
+                      <FaShieldAlt className="text-main text-2xl mb-2" />
+                      <span className="text-sm font-medium text-gray-700">CE Certified</span>
+                    </div>
+                    <div className="flex flex-col items-center text-center p-4 border border-gray-200 rounded-lg">
+                      <FaShieldAlt className="text-main text-2xl mb-2" />
+                      <span className="text-sm font-medium text-gray-700">RoHS Compliant</span>
+                    </div>
+                    <div className="flex flex-col items-center text-center p-4 border border-gray-200 rounded-lg">
+                      <FaShieldAlt className="text-main text-2xl mb-2" />
+                      <span className="text-sm font-medium text-gray-700">ISO 9001</span>
+                    </div>
+                    <div className="flex flex-col items-center text-center p-4 border border-gray-200 rounded-lg">
+                      <FaShieldAlt className="text-main text-2xl mb-2" />
+                      <span className="text-sm font-medium text-gray-700">IEC 61215</span>
+                    </div>
+                  </div>
+                </div>
+              )}
               
               <div className="bg-main-light p-6 rounded-lg">
                 <h3 className="text-xl font-semibold text-gray-800 mb-2">Request Custom Specifications</h3>

@@ -191,7 +191,7 @@ const OrderConfirmationPage = () => {
                 <div key={item._id} className="flex items-center border-b border-gray-100 pb-4 last:border-0 last:pb-0">
                   <div className="w-16 h-16 border border-gray-100 rounded-md overflow-hidden flex-shrink-0">
                     <img 
-                      src={item.product?.images?.[0] || 'https://via.placeholder.com/100'} 
+                      src={item.product?.images?.[0] ? fixImageUrl(item.product.images[0]) : fixImageUrl('placeholder')} 
                       alt={item.product?.name} 
                       className="w-full h-full object-contain"
                     />

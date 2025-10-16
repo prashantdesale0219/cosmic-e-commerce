@@ -4,8 +4,11 @@
 
 // Get API base URL from environment variables with fallback
 // Using import.meta.env for Vite projects
-const API_BASE_URL = import.meta.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
-console.log('Using API base URL for images:', API_BASE_URL);
+const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || import.meta.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+// Remove console.log in production
+if (process.env.NODE_ENV !== 'production') {
+  console.log('Using API base URL for images:', API_BASE_URL);
+}
 
 /**
  * Checks if a URL already contains a domain to prevent duplication
@@ -55,18 +58,35 @@ export const fixImageUrl = (url) => {
   if (typeof url === 'string' && (
     url.includes('via.placeholder.com') || 
     url.includes('placehold.co') ||
-    url.includes('placeholder')
+    (url.includes('placeholder') && !url.includes('uploads/'))
   )) {
     return fallbackImage;
   }
   
   // PRIORITY 1: Handle uploads path directly
   if (typeof url === 'string') {
-    // Extract uploads path if it exists anywhere in the URL
-    const uploadsPath = extractUploadsPath(url);
-    if (uploadsPath) {
-      // Direct path to uploads without any prefix
-      return `${API_BASE_URL}/${uploadsPath}`;
+    // Direct handling for uploads paths
+    if (url.includes('uploads/')) {
+      // If it already has the API base URL, return as is
+      if (url.includes(API_BASE_URL)) {
+        return url;
+      }
+      
+      // If it's a relative path with uploads, ensure proper formatting
+      if (url.startsWith('/uploads/')) {
+        return `${API_BASE_URL}${url}`;
+      }
+      
+      // If it's just 'uploads/something', add the API base URL and a slash
+      if (url.startsWith('uploads/')) {
+        return `${API_BASE_URL}/${url}`;
+      }
+      
+      // Extract uploads path if it exists anywhere else in the URL
+      const uploadsPath = extractUploadsPath(url);
+      if (uploadsPath) {
+        return `${API_BASE_URL}/${uploadsPath}`;
+      }
     }
     
     // If the URL already contains the same API base URL, return as is

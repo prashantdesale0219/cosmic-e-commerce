@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance with base URL
 const API = axios.create({
-  baseURL: import.meta.env.NEXT_PUBLIC_API_URL || "https://cosmic-hzcn.onrender.com/api",
+  baseURL: import.meta.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api",
 });
 
 // Add token to requests if available

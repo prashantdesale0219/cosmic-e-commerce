@@ -432,7 +432,7 @@ const CheckoutPage = () => {
                 <div key={item._id} className="flex items-start space-x-3 mb-3 pb-3 border-b border-gray-100">
                   <div className="w-16 h-16 flex-shrink-0 bg-gray-50 p-1 border border-gray-100 rounded-md">
                     <img 
-                      src={item.productId?.images?.[0] ? item.productId.images[0] : 'https://via.placeholder.com/100'} 
+                      src={item.productId?.images?.[0] ? fixImageUrl(item.productId.images[0]) : fixImageUrl('placeholder')} 
                       alt={item.productId?.name || 'Product'} 
                       className="w-full h-full object-contain"
                     />

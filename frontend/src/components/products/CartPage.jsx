@@ -217,7 +217,7 @@ const CartPage = () => {
                     {/* Product Image */}
                     <div className="w-24 h-24 mb-4 sm:mb-0 flex-shrink-0">
                       <img 
-                        src={item.productId?.images?.[0] ? fixImageUrl(item.productId.images[0]) : 'https://via.placeholder.com/100'} 
+                        src={item.productId?.images?.[0] ? fixImageUrl(item.productId.images[0]) : fixImageUrl('placeholder')} 
                         alt={item.productId?.name || 'Product'} 
                         className="w-full h-full object-contain"
                       />

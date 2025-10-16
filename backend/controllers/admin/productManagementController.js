@@ -465,8 +465,47 @@ exports.updateProduct = async (req, res) => {
         // Add full URL prefix to make it a valid URL for the model validation
         imageUrls.push(`http://localhost:8000/uploads/products/${file.filename}`);
       });
-      updateData.images = imageUrls;
+    }
+    
+    // Handle existing images from frontend
+    const existingImages = req.body.existingImages;
+    let finalImages = [];
+    
+    // Add new uploaded images if any
+    if (imageUrls.length > 0) {
+      finalImages = [...finalImages, ...imageUrls];
+    }
+    
+    // Add existing images if provided
+    if (existingImages) {
+      let parsedExistingImages = existingImages;
+      // Parse if it's a string
+      if (typeof existingImages === 'string') {
+        try {
+          parsedExistingImages = JSON.parse(existingImages);
+        } catch (err) {
+          // If parsing fails, use as is if it's a string
+          if (existingImages.trim()) {
+            parsedExistingImages = [existingImages];
+          } else {
+            parsedExistingImages = [];
+          }
+        }
+      }
+      
+      // Filter out any empty objects or invalid entries
+      if (Array.isArray(parsedExistingImages)) {
+        const validExistingImages = parsedExistingImages.filter(img => 
+          img && typeof img === 'string' && img.trim() !== ''
+        );
+        finalImages = [...finalImages, ...validExistingImages];
+      }
+    } 
+    // Only if we have images from either source, update the images field
+    if (finalImages.length > 0) {
+      updateData.images = finalImages;
     } else if (images) {
+      // Fallback to the original images field if provided
       // Check if images is a JSON string and parse it
       if (typeof images === 'string' && images.startsWith('[')) {
         try {

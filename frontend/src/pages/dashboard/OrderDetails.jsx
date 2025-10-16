@@ -218,7 +218,7 @@ const OrderDetails = () => {
                         <div className="h-10 w-10 flex-shrink-0">
                           <img 
                             className="h-10 w-10 object-contain" 
-                            src={item.productId?.images?.[0] || 'https://via.placeholder.com/100'} 
+                            src={item.productId?.images?.[0] ? fixImageUrl(item.productId.images[0]) : fixImageUrl('placeholder')} 
                             alt={item.productId?.name} 
                           />
                         </div>

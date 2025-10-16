@@ -220,9 +220,9 @@ const ApplicationSchema = new mongoose.Schema({
     type: String,
     validate: {
       validator: function(v) {
-        return v === undefined || v === null || v === '' || /^(http|https):\/\/[^ "]+$/.test(v);
+        return v === undefined || v === null || v === '' || /^(http|https):\/\/[^ "]+$/.test(v) || /^[A-Za-z]+:[A-Za-z0-9]+$/.test(v);
       },
-      message: props => `${props.value} is not a valid URL!`
+      message: props => `${props.value} is not a valid URL or icon format!`
     }
   }
 }); 

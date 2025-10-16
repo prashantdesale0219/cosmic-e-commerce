@@ -69,7 +69,10 @@ app.use('/uploads', (req, res, next) => {
   next();
 }, express.static(path.join(__dirname, 'uploads')));
 
-// Add direct access to uploads folder
+// Add direct access to uploads folder with explicit path
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Add direct access to root folder
 app.use(express.static(path.join(__dirname)));
 
 // Start main server

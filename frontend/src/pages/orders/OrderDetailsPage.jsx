@@ -252,7 +252,7 @@ const OrderDetailsPage = () => {
                         <div className="h-10 w-10 flex-shrink-0">
                           <img 
                             className="h-10 w-10 object-contain" 
-                            src={item.product?.images?.[0] || 'https://via.placeholder.com/100'} 
+                            src={item.product?.images?.[0] ? fixImageUrl(item.product.images[0]) : fixImageUrl('placeholder')} 
                             alt={item.product?.name} 
                           />
                         </div>
