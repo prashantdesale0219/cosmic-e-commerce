@@ -9,6 +9,9 @@ const nodemailer = require('nodemailer');
       user: process.env.SMTP_EMAIL || 'your-email@gmail.com',
       pass: process.env.SMTP_PASSWORD || 'your-password'
     },
+    tls: {
+      rejectUnauthorized: false // Allow self-signed certificates and fix TLS issues
+    },
     debug: true, // Show debug output
     logger: true // Log information about the mail
   });
