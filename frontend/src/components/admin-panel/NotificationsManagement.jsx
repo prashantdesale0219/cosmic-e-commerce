@@ -1,17 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
-import { FaBell, FaCheck, FaTrash, FaPlus } from 'react-icons/fa';
+import { FaBell, FaCheck, FaTrash, FaPlus, FaEnvelope, FaUsers } from 'react-icons/fa';
 import { notificationManagementApi } from '../../services/adminApi';
 
 const NotificationsManagement = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [showNewsletterForm, setShowNewsletterForm] = useState(false);
   const [newNotification, setNewNotification] = useState({
     title: '',
     message: '',
     type: 'system_alert'
   });
+  const [newsletterNotification, setNewsletterNotification] = useState({
+    title: '',
+    message: '',
+    type: 'newsletter'
+  });
+  const [sendingNewsletter, setSendingNewsletter] = useState(false);
 
   // Fetch notifications
   useEffect(() => {
@@ -117,6 +124,49 @@ const NotificationsManagement = () => {
       [name]: value
     });
   };
+  
+  // Handle newsletter form input changes
+  const handleNewsletterInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewsletterNotification({
+      ...newsletterNotification,
+      [name]: value
+    });
+  };
+  
+  // Send newsletter notification
+  const sendNewsletterNotification = async (e) => {
+    e.preventDefault();
+    
+    if (!newsletterNotification.title || !newsletterNotification.message) {
+      toast.error('कृपया सभी आवश्यक फ़ील्ड भरें');
+      return;
+    }
+    
+    try {
+      setSendingNewsletter(true);
+      const response = await notificationManagementApi.sendNewsletterNotification({
+        title: newsletterNotification.title,
+        message: newsletterNotification.message
+      });
+      
+      toast.success('न्यूज़लेटर सदस्यों को नोटिफिकेशन सफलतापूर्वक भेजा गया!');
+      
+      // Reset form
+      setNewsletterNotification({
+        title: '',
+        message: '',
+        type: 'newsletter'
+      });
+      
+      setShowNewsletterForm(false);
+    } catch (error) {
+      console.error('Error sending newsletter notification:', error);
+      toast.error(`न्यूज़लेटर नोटिफिकेशन भेजने में त्रुटि: ${error.response?.data?.error || error.message}`);
+    } finally {
+      setSendingNewsletter(false);
+    }
+  };
 
   // Get notification type badge
   const getTypeBadge = (type) => {
@@ -138,13 +188,28 @@ const NotificationsManagement = () => {
     <div className="p-6 bg-white rounded-lg shadow-md">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Notifications Management</h1>
-        <button 
-          onClick={() => setShowForm(!showForm)}
-          className="flex items-center px-4 py-2 bg-[#92c51b] text-white rounded-md hover:bg-[#7ba515] transition-colors"
-        >
-          <FaPlus className="mr-2" />
-          {showForm ? 'Cancel' : 'Create Notification'}
-        </button>
+        <div className="flex space-x-2">
+          <button 
+            onClick={() => {
+              setShowForm(!showForm);
+              setShowNewsletterForm(false);
+            }}
+            className="flex items-center px-4 py-2 bg-[#92c51b] text-white rounded-md hover:bg-[#7ba515] transition-colors"
+          >
+            <FaPlus className="mr-2" />
+            {showForm ? 'Cancel' : 'Create Notification'}
+          </button>
+          <button 
+            onClick={() => {
+              setShowNewsletterForm(!showNewsletterForm);
+              setShowForm(false);
+            }}
+            className="flex items-center px-4 py-2 bg-[#4a90e2] text-white rounded-md hover:bg-[#3a7bc8] transition-colors"
+          >
+            <FaEnvelope className="mr-2" />
+            {showNewsletterForm ? 'Cancel' : 'Send Newsletter'}
+          </button>
+        </div>
       </div>
 
       {/* Create Notification Form */}
@@ -207,6 +272,69 @@ const NotificationsManagement = () => {
                 className="bg-[#92c51b] hover:bg-[#7ba515] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
               >
                 Send Notification
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Newsletter Notification Form */}
+      {showNewsletterForm && (
+        <div className="mb-6 p-4 border border-gray-200 rounded-md bg-blue-50">
+          <h2 className="text-lg font-semibold mb-4 flex items-center">
+            <FaUsers className="mr-2 text-blue-600" />
+            Send Notification to Newsletter Subscribers
+          </h2>
+          <form onSubmit={sendNewsletterNotification}>
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="newsletterTitle">
+                Title*
+              </label>
+              <input
+                type="text"
+                id="newsletterTitle"
+                name="title"
+                value={newsletterNotification.title}
+                onChange={handleNewsletterInputChange}
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                required
+                placeholder="न्यूज़लेटर का शीर्षक"
+              />
+            </div>
+            
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="newsletterMessage">
+                Message*
+              </label>
+              <textarea
+                id="newsletterMessage"
+                name="message"
+                value={newsletterNotification.message}
+                onChange={handleNewsletterInputChange}
+                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                rows="6"
+                required
+                placeholder="न्यूज़लेटर का संदेश"
+              ></textarea>
+            </div>
+            
+            <div className="flex justify-end">
+              <button
+                type="submit"
+                disabled={sendingNewsletter}
+                className="bg-[#4a90e2] hover:bg-[#3a7bc8] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline flex items-center"
+              >
+                {sendingNewsletter ? (
+                  <>
+                    <span className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>
+                    भेजा जा रहा है...
+                  </>
+                ) : (
+                  <>
+                    <FaEnvelope className="mr-2" />
+                    सभी सदस्यों को भेजें
+                  </>
+                )}
               </button>
             </div>
           </form>

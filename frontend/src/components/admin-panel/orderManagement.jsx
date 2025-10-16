@@ -26,11 +26,33 @@ const OrderManagement = () => {
           const productPrice = order.totalPrice || 0;
           const finalTotal = productPrice + shippingCharges;
           
+          // Get customer name from multiple possible sources
+          let customerName = 'Unknown User';
+          if (order.userId && order.userId.name) {
+            customerName = order.userId.name;
+          } else if (order.shippingAddress && order.shippingAddress.fullName) {
+            customerName = order.shippingAddress.fullName;
+          } else if (order.guestDetails && order.guestDetails.name) {
+            customerName = order.guestDetails.name;
+          }
+
+          // Get customer email from multiple possible sources
+          let customerEmail = 'No Email';
+          if (order.userId && order.userId.email) {
+            customerEmail = order.userId.email;
+          } else if (order.customerEmail) {
+            customerEmail = order.customerEmail;
+          } else if (order.shippingAddress && order.shippingAddress.email) {
+            customerEmail = order.shippingAddress.email;
+          } else if (order.guestDetails && order.guestDetails.email) {
+            customerEmail = order.guestDetails.email;
+          }
+
           return {
             id: order._id,
             orderId: order.orderId,
-            customer: order.userId ? (order.userId.name || 'Unknown User') : 'Unknown User',
-            email: order.userId ? (order.userId.email || 'No Email') : 'No Email',
+            customer: customerName,
+            email: customerEmail,
             date: new Date(order.createdAt).toLocaleDateString(),
             status: order.orderStatus,
             total: `₹${finalTotal.toFixed(2)}`, // Display the final total (product price + shipping)

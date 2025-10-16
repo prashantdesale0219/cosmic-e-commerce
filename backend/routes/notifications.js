@@ -8,7 +8,8 @@ const {
   deleteNotification,
   logActivity,
   getActivityLogs,
-  getErrorLogs
+  getErrorLogs,
+  sendNewsletterNotification
 } = require('../controllers/notifications/notificationController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -20,6 +21,7 @@ router.delete('/:id', protect, deleteNotification);
 
 // Admin notification routes
 router.post('/', protect, authorize('admin'), createNotification);
+router.post('/newsletter', protect, authorize('admin'), sendNewsletterNotification);
 router.get('/activity-logs', protect, authorize('admin'), getActivityLogs);
 router.get('/error-logs', protect, authorize('admin'), getErrorLogs);
 router.post('/log-activity', protect, logActivity);

@@ -16,6 +16,7 @@ const CartPage = lazy(() => import('./components/products/CartPage'));
 const OrdersPage = lazy(() => import('./pages/orders/OrdersPage'));
 const OrderDetailsPage = lazy(() => import('./pages/orders/OrderDetailsPage'));
 const OrderConfirmationPage = lazy(() => import('./pages/OrderConfirmationPage'));
+const OrderConfirmPage = lazy(() => import('./pages/OrderConfirmPage'));
 const OrderPendingPage = lazy(() => import('./pages/orders/OrderPendingPage'));
 const PendingOrderPage = lazy(() => import('./pages/orders/PendingOrderPage'));
 const ReviewsPage = lazy(() => import('./pages/reviews/ReviewsPage'));
@@ -221,6 +222,11 @@ function App() {
                     <Route path="/order-confirmation/:orderId/:token" element={
                       <Suspense fallback={<LoadingSpinner />}>
                         <OrderConfirmationPage />
+                      </Suspense>
+                    } />
+                    <Route path="/order/confirm/:orderId/:token" element={
+                      <Suspense fallback={<LoadingSpinner />}>
+                        <OrderConfirmPage />
                       </Suspense>
                     } />
                     <Route path="/order-pending/:orderId" element={

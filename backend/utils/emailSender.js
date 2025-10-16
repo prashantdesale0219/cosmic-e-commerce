@@ -6,9 +6,11 @@ const nodemailer = require('nodemailer');
     port: process.env.SMTP_PORT || 587,
     secure: process.env.SMTP_SECURE === 'true' || false,
     auth: {
-      user: process.env.SMTP_EMAIL,
-      pass: process.env.SMTP_PASSWORD
-    }
+      user: process.env.SMTP_EMAIL || 'your-email@gmail.com',
+      pass: process.env.SMTP_PASSWORD || 'your-password'
+    },
+    debug: true, // Show debug output
+    logger: true // Log information about the mail
   });
   
   /**

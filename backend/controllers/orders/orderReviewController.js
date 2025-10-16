@@ -4,6 +4,7 @@ const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const { logError } = require('../notifications/notificationController');
 const emailSender = require('../../utils/emailSender');
+const { createNotification } = require('../../utils/notificationHelper');
 
 // Skip email sending in development mode to avoid authentication errors
 let transporter;
@@ -444,10 +445,22 @@ exports.confirmOrder = async (req, res) => {
     order.orderStatus = 'confirmed';
     await order.save();
     
+    // If HTML request, redirect to frontend
+    if (req.headers.accept && req.headers.accept.includes('text/html')) {
+      return res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/order/confirm/${order._id}/${token}`);
+    }
+    
     return res.status(200).json({
       success: true,
       message: 'Order confirmed successfully',
-      data: order
+      order: {
+        _id: order._id,
+        orderId: order.orderId,
+        orderStatus: order.orderStatus,
+        totalPrice: order.totalPrice,
+        finalPrice: order.finalPrice,
+        shippingAddress: order.shippingAddress
+      }
     });
   } catch (error) {
     logError('Error confirming order', error);
@@ -496,11 +509,11 @@ exports.cancelOrderRequest = async (req, res) => {
 // Confirm order by customer
 exports.confirmOrderByCustomer = async (req, res) => {
   try {
-    const { id, token } = req.params;
+    const { orderId, token } = req.params;
     
     // Find order by ID and token
     const order = await Order.findOne({
-      _id: id,
+      _id: orderId,
       confirmationToken: token
     });
     
@@ -535,16 +548,46 @@ exports.confirmOrderByCustomer = async (req, res) => {
       });
     }
     
+    // Check if order is already confirmed to prevent duplicate processing
+    if (order.orderStatus === 'Confirmed') {
+      return res.status(200).json({
+        success: true,
+        message: 'Order already confirmed',
+        order: {
+          _id: order._id,
+          orderId: order.orderId,
+          orderStatus: order.orderStatus,
+          totalPrice: order.totalPrice,
+          finalPrice: order.finalPrice,
+          shippingAddress: order.shippingAddress
+        }
+      });
+    }
+    
     // Generate real order ID now that customer has confirmed
-    const orderId = Math.floor(100000 + Math.random() * 900000).toString();
+    const uniqueOrderId = Math.floor(100000 + Math.random() * 900000).toString();
     
     // Update order status and set order ID
     order.orderStatus = 'Confirmed';
-    order.orderId = orderId;
+    order.adminStatus = 'Confirmed'; // Update admin status as well
+    order.orderId = uniqueOrderId;
     order.confirmationToken = undefined; // Clear token after use
     order.confirmedAt = new Date();
     
     await order.save();
+    
+    // Create notification for admin
+    try {
+      await createNotification({
+        type: 'ORDER_CONFIRMED',
+        message: `Order #${orderId} has been confirmed by customer`,
+        userId: 'admin',
+        orderId: order._id,
+        isAdminNotification: true
+      });
+    } catch (notifError) {
+      console.error('Failed to create admin notification:', notifError);
+    }
     
     // Send confirmation email to customer
     let customerEmail, customerName;
